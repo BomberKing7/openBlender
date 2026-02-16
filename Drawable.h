@@ -7,6 +7,34 @@
 #define mat4x4 array<array<float,4>,4>
 using namespace std;
 GLuint texlen=0;
+#define STB_IMAGE_IMPLEMENTATION
+#define uint unsigned int
+#include "stb_image.h"
+
+
+uint stb_maketex(string file){
+int width, height, nrChannels;
+glGenTextures(1, &texlen);
+glBindTexture(GL_TEXTURE_2D, texlen);
+// set the texture wrapping/filtering options (on currently bound texture)
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+// load and generate the texture
+unsigned char *data = stbi_load(file.data(), &width, &height,&nrChannels, 0);
+if (data)
+{
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,GL_UNSIGNED_BYTE, data);
+}
+else
+{
+std::cout << "Failed to load texture" << std::endl;
+}
+stbi_image_free(data);
+return texlen++;
+}
+
 void out(mat4x4 m)
 {
     for(int i=0; i<4; i++)
@@ -122,14 +150,8 @@ mat4x4 getshift(point sh) {
         0,0,0,1
     };
 }
-bool once=1;
 point mul(mat4x4 m,point p)
 {
-    if(once)
-    {
-        out(m);
-        cout<<endl<<p.x<<" "<<p.y<<" "<<p.z<<endl;
-    }
     point res;
     res.x=m[0][0]*p.x+m[0][1]*p.y+m[0][2]*p.z+m[0][3];
     res.y=m[1][0]*p.x+m[1][1]*p.y+m[1][2]*p.z+m[1][3];
@@ -137,8 +159,6 @@ point mul(mat4x4 m,point p)
     float w=m[3][0]*p.x+m[3][1]*p.y+m[3][2]*p.z+m[3][3];
     res={res.x/w,res.y/w,res.z/w};
     p=res;
-    if(once)cout<<endl<<p.x<<" " <<p.y<<" "<<p.z<<endl;
-    once=0;
     return res;
 }
 class Rotation
@@ -233,6 +253,10 @@ public:
                 material[g].color=point(atof(line.substr(words[1].first,words[1].second).data()),
                     atof(line.substr(words[2].first,words[2].second).data()),
                     atof(line.substr(words[3].first,words[3].second).data()));
+            }else if(line.substr(words[0].first,words[0].second)=="map_Kd")
+            {
+                material[g].textured=1;
+                material[g].tex=stb_maketex(line.substr(words[1].first,words[1].second));
             }
 
 
@@ -353,6 +377,7 @@ public:
         {
             if(tp[i].first<0)tp[i].first++;
             if(tp[i].second<0)tp[i].second++;
+            tp[i].second=1-tp[i].second;//this specific line is for a glitch with stb_image texture loading process
         }
         cout<<"total of "<<v<<"vertices and "<<f<<" faces\n";
 

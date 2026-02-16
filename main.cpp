@@ -219,8 +219,9 @@ int main(int argc,char* argv[ ])
     d1.rotate("swing1","diameter4",1,1,-3.14159/4,3.14159/4);
     d1.rotate("swing2","diameter4",1.1,1,-3.14159/4,3.14159/4);
     d1.rotate("swing3","diameter4",1.2,1,-3.14159/4,3.14159/4);
-
+    d2.loadFile("files/LowPolyCars.obj");
     glutMainLoop();
 
     return 0;
-}// g++ -Wall  main.cpp -lGL -lglut -lGLU   -o main.o && ./main.o
+}
+//g++ -Wall  main.cpp  -lGL -lglut -lGLU   -o main.o && ./main.o
